@@ -1,6 +1,5 @@
-import { Link, Tabs, useRouter } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { Pressable } from "react-native";
 
 import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 
@@ -31,24 +30,6 @@ export default function TabLayout() {
               tintColor={color}
               size={28}
             />
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable style={{ marginRight: 15 }}>
-                {({ pressed }) => (
-                  <SymbolView
-                    name={{
-                      ios: "pencil.tip.crop.circle.badge.plus",
-                      android: "home_and_garden",
-                      web: "home_and_garden",
-                    }}
-                    size={25}
-                    // tintColor={Colors[colorScheme].text}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
           ),
         }}
       />
@@ -89,24 +70,6 @@ export default function TabLayout() {
               tintColor={color}
               size={28}
             />
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable style={{ marginRight: 15 }}>
-                {({ pressed }) => (
-                  <SymbolView
-                    name={{
-                      ios: "pencil.tip.crop.circle.badge.plus",
-                      android: "home_and_garden",
-                      web: "home_and_garden",
-                    }}
-                    size={25}
-                    // tintColor={Colors[colorScheme].text}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
           ),
         }}
       />

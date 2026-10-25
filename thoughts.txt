@@ -1,0 +1,17 @@
+create separate db.ts file
+db migration
+
+tasks table
+  id int
+  title str
+  deadline timestamp
+  effort int -- constraining the range will make the choise easier ?( 2 / 3 / 5 )?
+
+tasks form -- modal
+  title+
+  deadline -- calendar?
+  effort -- slider?
+
+tasks graph
+  xAxis -- deadline
+  yAxis -- effort

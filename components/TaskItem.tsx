@@ -1,33 +1,31 @@
-import { TaskInterface, updateTask } from "@/functions/tasks";
+import { TaskInterface, updateTask } from "@/utils/tasks";
+import { useMutation } from "@tanstack/react-query";
 import { Checkbox } from "expo-checkbox";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Text, View } from "react-native";
 
 export default function TaskItem({ id, title, complete }: TaskInterface) {
   const [isComplete, setIsComplete] = useState(complete === 1 ? true : false);
-  // const db = useSQLiteContext();
 
-  useEffect(() => {
-    console.log(
-      `task ${id} status is: ${isComplete ? "complete" : "not complete"}`,
-    );
-  }, [isComplete]);
+  const mutation = useMutation({
+    mutationFn: updateTask,
+    onSuccess: (_, { status }) => {
+      setIsComplete(status);
+    },
+  });
 
   return (
-    <View style={{ display: "flex", flexDirection: "row", gap: 5 }}>
+    <View className="flex gap-1.5">
       <Checkbox
         value={isComplete}
         onValueChange={(v) => {
-          updateTask(id, v);
-          setIsComplete(v);
+          mutation.mutate({ id, status: v });
         }}
       />
       <View>
-        <Text style={{ color: "#fff" }}>{id}</Text>
-        <Text style={{ color: "#fff" }}>{title}</Text>
-        <Text
-          style={{ color: "#fff" }}
-        >{`is ${isComplete ? "complete" : "not complete"}`}</Text>
+        <Text>{id}</Text>
+        <Text>{title}</Text>
+        <Text>{`is ${isComplete ? "complete" : "not complete"}`}</Text>
       </View>
     </View>
   );
