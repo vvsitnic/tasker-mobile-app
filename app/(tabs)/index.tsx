@@ -7,7 +7,6 @@ import { RefreshControl, ScrollView, View } from "react-native";
 
 export default function TabOneScreen() {
   const [refreshing, setRefreshing] = useState(false);
-
   const query = useQuery({ queryKey: ["tasks"], queryFn: getTasks });
 
   const onRefresh = useCallback(() => {
@@ -16,18 +15,18 @@ export default function TabOneScreen() {
       query.refetch();
       setRefreshing(false);
     }, 700);
-  }, []);
+  }, [query]);
 
   return (
-    <View className="flex flex-col">
+    <View className="flex flex-1">
       <ScrollView
         className="px-5 pt-5"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {query.data?.map(({ id, title, complete }) => (
-          <TaskItem key={id} id={id} title={title} complete={complete} />
+        {query.data?.map((data) => (
+          <TaskItem key={data.id} {...data} />
         ))}
       </ScrollView>
       <Link

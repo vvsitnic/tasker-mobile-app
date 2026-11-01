@@ -5,7 +5,7 @@ tasks table
   id int
   title str
   deadline timestamp
-  effort int -- constraining the range will make the choise easier ?( 2 / 3 / 5 )?
+  effort int -- constraining the range will make the choise easier ?( 2 / 3 / 5 )? 0 - 6?
 
 tasks form -- modal
   title+
@@ -15,3 +15,6 @@ tasks form -- modal
 tasks graph
   xAxis -- deadline
   yAxis -- effort
+  log fn for x axis
+
+link maxdate to task

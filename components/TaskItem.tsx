@@ -4,7 +4,13 @@ import { Checkbox } from "expo-checkbox";
 import { useState } from "react";
 import { Text, View } from "react-native";
 
-export default function TaskItem({ id, title, complete }: TaskInterface) {
+export default function TaskItem({
+  id,
+  title,
+  complete,
+  effort,
+  importance,
+}: TaskInterface) {
   const [isComplete, setIsComplete] = useState(complete === 1 ? true : false);
 
   const mutation = useMutation({
@@ -24,7 +30,7 @@ export default function TaskItem({ id, title, complete }: TaskInterface) {
       />
       <View>
         <Text>{id}</Text>
-        <Text>{title}</Text>
+        <Text>{`${title} ${effort} ${new Date(importance)}`}</Text>
         <Text>{`is ${isComplete ? "complete" : "not complete"}`}</Text>
       </View>
     </View>
