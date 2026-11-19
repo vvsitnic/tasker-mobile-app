@@ -1,4 +1,4 @@
-import { Button, StyleSheet } from "react-native";
+import { Button, Pressable, ScrollView, StyleSheet } from "react-native";
 
 import { Text, View } from "@/components/Themed";
 import { getTasks, Task } from "@/db/tasks";
@@ -21,7 +21,21 @@ export default function TabOneScreen() {
       <Text style={styles.title}>Tasks List Here</Text>
       <Button title="New Task" onPress={() => router.navigate("/tasks/new")} />
       <Button title="Update Lates" onPress={load} />
-      <Text>{JSON.stringify(tasks)}</Text>
+      <ScrollView style={styles.scroll}>
+        {tasks.map((t) => (
+          <Pressable
+            key={t.id}
+            onPress={() =>
+              router.navigate({
+                pathname: "/tasks/[id]/edit",
+                params: { id: t.id },
+              })
+            }
+          >
+            <Text>{JSON.stringify(t)}</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
     </View>
   );
 }
@@ -31,6 +45,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  scroll: {
+    flexGrow: 0,
+    maxHeight: "70%",
   },
   title: {
     fontSize: 20,
