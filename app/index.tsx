@@ -2,6 +2,7 @@ import { Button, Pressable, ScrollView, StyleSheet } from "react-native";
 
 import { Text, View } from "@/components/Themed";
 import { getTasks, Task } from "@/db/tasks";
+import { useDbVersion } from "@/utils/dbVersion";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
@@ -10,11 +11,12 @@ export default function TabOneScreen() {
   const router = useRouter();
   const db = useSQLiteContext();
   const [tasks, setTasks] = useState<Task[]>([]);
+  const dbVersion = useDbVersion((s) => s.version);
 
   const load = useCallback(async () => setTasks(await getTasks(db)), [db]);
   useEffect(() => {
     load();
-  }, [load]);
+  }, [dbVersion, load]);
 
   return (
     <View style={styles.container}>

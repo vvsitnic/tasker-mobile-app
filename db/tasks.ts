@@ -58,7 +58,6 @@ export async function addTask(
   );
 
   const subtasks = useSubtasks.getState().subtasks;
-  console.log(subtasks);
   for (const s of subtasks) {
     await db.runAsync(
       "INSERT INTO task (parentId, label, dueDate) VALUES (?, ?, ?)",

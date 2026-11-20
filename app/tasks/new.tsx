@@ -1,5 +1,6 @@
 import { Text, View } from "@/components/Themed";
 import { addTask } from "@/db/tasks";
+import { useDbVersion } from "@/utils/dbVersion";
 import { useSubtasks } from "@/utils/subtasks";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
@@ -11,10 +12,7 @@ export default function NewTask() {
   const db = useSQLiteContext();
   const subtasks = useSubtasks((s) => s.subtasks);
   const clear = useSubtasks((s) => s.clear);
-
-  useEffect(() => {
-    console.log(subtasks);
-  }, [subtasks]);
+  const bump = useDbVersion((s) => s.bump);
 
   useEffect(() => {
     return () => {
@@ -51,6 +49,7 @@ export default function NewTask() {
         title="Create Task"
         onPress={async () => {
           await create("hello-main", 0);
+          bump();
           router.back();
         }}
       />

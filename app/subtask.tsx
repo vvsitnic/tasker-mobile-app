@@ -10,10 +10,6 @@ export default function Subtask() {
   const addSubtask = useSubtasks((s) => s.addSubtask);
   const updateSubtask = useSubtasks((s) => s.updateSubtask);
 
-  useEffect(() => {
-    console.log(id);
-  }, [id]);
-
   return (
     <View style={styles.container}>
       {id ? (
