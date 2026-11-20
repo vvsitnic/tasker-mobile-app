@@ -1,3 +1,4 @@
+import { useDbVersion } from "@/utils/dbVersion";
 import { useSubtasks } from "@/utils/subtasks";
 import type { SQLiteDatabase } from "expo-sqlite";
 
@@ -8,6 +9,10 @@ export type Task = {
   dueDate: number;
   isCompleted: boolean;
 };
+
+export type TaskChanges = Partial<
+  Pick<Task, "label" | "dueDate" | "isCompleted">
+>;
 
 type TaskRow = Omit<Task, "isCompleted"> & { isCompleted: number };
 const toTask = (r: TaskRow): Task => ({
@@ -66,7 +71,26 @@ export async function addTask(
       s.dueDate,
     );
   }
+  useDbVersion.getState().bump();
   return res.lastInsertRowId;
+}
+
+export async function updateTask(
+  db: SQLiteDatabase,
+  id: number,
+  changes: TaskChanges,
+) {
+  const columns = Object.keys(changes) as (keyof typeof changes)[];
+  if (columns.length === 0) return;
+
+  const setClause = columns.map((col) => `${col} = ?`).join(", ");
+  const values = columns.map((col) => {
+    if (col === "isCompleted") return changes[col] ? 1 : 0;
+    return changes[col] as string | number;
+  });
+
+  await db.runAsync(`UPDATE task SET ${setClause} WHERE id = ?`, ...values, id);
+  useDbVersion.getState().bump();
 }
 
 export async function setCompleted(
