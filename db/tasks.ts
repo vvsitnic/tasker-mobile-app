@@ -55,24 +55,25 @@ export async function addTask(
   dueDate: number,
   parentId: number | null = null,
 ) {
-  const res = await db.runAsync(
-    "INSERT INTO task (parentId, label, dueDate) VALUES (?, ?, ?)",
-    parentId,
-    label,
-    dueDate,
-  );
-
-  const subtasks = useSubtasks.getState().subtasks;
-  for (const s of subtasks) {
-    await db.runAsync(
+  await db.withTransactionAsync(async () => {
+    const res = await db.runAsync(
       "INSERT INTO task (parentId, label, dueDate) VALUES (?, ?, ?)",
-      res.lastInsertRowId,
-      res.lastInsertRowId + "-" + s.label,
-      s.dueDate,
+      parentId,
+      label,
+      dueDate,
     );
-  }
+
+    const subtasks = useSubtasks.getState().subtasks;
+    for (const s of subtasks) {
+      await db.runAsync(
+        "INSERT INTO task (parentId, label, dueDate) VALUES (?, ?, ?)",
+        res.lastInsertRowId,
+        res.lastInsertRowId + "-" + s.label,
+        s.dueDate,
+      );
+    }
+  });
   useDbVersion.getState().bump();
-  return res.lastInsertRowId;
 }
 
 export async function updateTask(
@@ -98,13 +99,38 @@ export async function setCompleted(
   id: number,
   done: boolean,
 ) {
-  await db.runAsync(
-    "UPDATE task SET isCompleted = ? WHERE id = ?",
-    done ? 1 : 0,
-    id,
-  );
+  const v = done ? 1 : 0;
+
+  await db.withTransactionAsync(async () => {
+    const row = await db.getFirstAsync<{ parentId: number }>(
+      "SELECT parentId FROM task WHERE id = ?",
+      id,
+    );
+    if (!row) return;
+
+    if (row.parentId === id) {
+      await db.runAsync(
+        "UPDATE task SET isCompleted = ? WHERE parentId = ?",
+        v,
+        id,
+      );
+    } else {
+      await db.runAsync("UPDATE task SET isCompleted = ? WHERE id = ?", v, id);
+      await db.runAsync(
+        `UPDATE task
+         SET isCompleted = NOT EXISTS (
+           SELECT 1 FROM task c
+           WHERE c.parentId = task.id AND c.id <> c.parentId AND c.isCompleted = 0
+         )
+         WHERE id = ?`,
+        row.parentId,
+      );
+    }
+  });
+  useDbVersion.getState().bump();
 }
 
 export async function deleteTask(db: SQLiteDatabase, id: number) {
   await db.runAsync("DELETE FROM task WHERE id = ?", id);
+  useDbVersion.getState().bump();
 }

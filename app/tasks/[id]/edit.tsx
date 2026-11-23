@@ -2,11 +2,13 @@ import { Text, View } from "@/components/Themed";
 import {
   getSubtasks,
   getTask,
+  setCompleted,
   Task,
   TaskChanges,
   updateTask,
 } from "@/db/tasks";
 import { useDbVersion } from "@/utils/dbVersion";
+import Checkbox from "expo-checkbox";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
 import { useCallback, useEffect, useState } from "react";
@@ -48,14 +50,26 @@ export default function EditTask() {
   return (
     <View style={styles.container}>
       {task && (
-        <Button
-          title="Update task"
-          onPress={() => {
-            update({ label: task.label + "-edit", dueDate: task.dueDate + 1 });
-          }}
-        />
+        <>
+          <Button
+            title="Update task"
+            onPress={() => {
+              update({
+                label: task.label + "-edit",
+                dueDate: task.dueDate + 1,
+              });
+            }}
+          />
+          <View>
+            <Checkbox
+              value={task.isCompleted}
+              onValueChange={(done) => setCompleted(db, task.id, done)}
+            />
+            <Text>{JSON.stringify(task)}</Text>
+          </View>
+        </>
       )}
-      <Text>{JSON.stringify(task)}</Text>
+
       {subtasks.length > 0 && (
         <>
           <Text>Subtasks:</Text>
@@ -70,6 +84,10 @@ export default function EditTask() {
                   })
                 }
               >
+                <Checkbox
+                  value={t.isCompleted}
+                  onValueChange={(done) => setCompleted(db, t.id, done)}
+                />
                 <Text>{JSON.stringify(t)}</Text>
               </Pressable>
             ))}

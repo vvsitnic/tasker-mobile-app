@@ -1,7 +1,8 @@
+import Checkbox from "expo-checkbox";
 import { Button, Pressable, ScrollView, StyleSheet } from "react-native";
 
 import { Text, View } from "@/components/Themed";
-import { getTasks, Task } from "@/db/tasks";
+import { getTasks, setCompleted, Task } from "@/db/tasks";
 import { useDbVersion } from "@/utils/dbVersion";
 import { useRouter } from "expo-router";
 import { useSQLiteContext } from "expo-sqlite";
@@ -22,7 +23,6 @@ export default function TabOneScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Tasks List Here</Text>
       <Button title="New Task" onPress={() => router.navigate("/tasks/new")} />
-      <Button title="Update Lates" onPress={load} />
       <ScrollView style={styles.scroll}>
         {tasks.map((t) => (
           <Pressable
@@ -34,6 +34,10 @@ export default function TabOneScreen() {
               })
             }
           >
+            <Checkbox
+              value={t.isCompleted}
+              onValueChange={(done) => setCompleted(db, t.id, done)}
+            />
             <Text>{JSON.stringify(t)}</Text>
           </Pressable>
         ))}
