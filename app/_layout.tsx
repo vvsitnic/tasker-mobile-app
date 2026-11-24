@@ -47,7 +47,13 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <SQLiteProvider databaseName="app.db" onInit={migrateDb}>
         <Stack>
-          {/* <Stack.Screen name="createTask" options={{ headerShown: false }} /> */}
+          <Stack.Screen name="subtask" options={{ headerShown: false }} />
+          <Stack.Screen name="tasks/new" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="tasks/[id]/edit"
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: "modal" }} />
         </Stack>
       </SQLiteProvider>

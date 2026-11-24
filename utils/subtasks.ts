@@ -4,7 +4,6 @@ export type Subtask = {
   id: string;
   label: string;
   dueDate: number;
-  // isComplete: boolean;
 };
 
 type State = {
@@ -14,12 +13,12 @@ type State = {
     id: string,
     patch: { label: string; dueDate: number },
   ) => void;
-  // toggleSubtask: (id: string) => void;
+  getSubtask: (id: string) => Subtask | undefined;
   removeSubtask: (id: string) => void;
   clear: () => void;
 };
 
-export const useSubtasks = create<State>((set) => ({
+export const useSubtasks = create<State>((set, get) => ({
   subtasks: [],
   addSubtask: (label, dueDate) =>
     set((s) => ({
@@ -28,12 +27,7 @@ export const useSubtasks = create<State>((set) => ({
         { id: String(Date.now()), label, dueDate, isCompleted: false },
       ],
     })),
-  // toggleSubtask: (id) =>
-  //   set((s) => ({
-  //     subtasks: s.subtasks.map((t) =>
-  //       t.id === id ? { ...t, isCompleted: !t.isCompleted } : t,
-  //     ),
-  //   })),
+  getSubtask: (id) => get().subtasks.find((t) => t.id === id),
   removeSubtask: (id) =>
     set((s) => ({ subtasks: s.subtasks.filter((t) => t.id !== id) })),
   updateSubtask: (id, patch) =>

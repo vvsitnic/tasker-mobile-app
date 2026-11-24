@@ -22,7 +22,7 @@ const toTask = (r: TaskRow): Task => ({
 
 export async function getTasks(db: SQLiteDatabase): Promise<Task[]> {
   const rows = await db.getAllAsync<TaskRow>(
-    "SELECT * FROM task WHERE id = parentId ORDER BY id", // ORDER BY dueDate, isCompleted ASC
+    "SELECT * FROM task WHERE id = parentId ORDER BY dueDate ASC", // ORDER BY dueDate, isCompleted ASC
   );
   return rows.map(toTask);
 }
@@ -68,7 +68,7 @@ export async function addTask(
       await db.runAsync(
         "INSERT INTO task (parentId, label, dueDate) VALUES (?, ?, ?)",
         res.lastInsertRowId,
-        res.lastInsertRowId + "-" + s.label,
+        s.label,
         s.dueDate,
       );
     }
