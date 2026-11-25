@@ -28,7 +28,7 @@ export default function NewTask() {
     return () => {
       clear();
     };
-  }, []);
+  }, [clear]);
 
   const create = useCallback(
     async (label: string, dueDate: number, parentId?: number) =>
@@ -91,7 +91,7 @@ export default function NewTask() {
               <View className="flex flex-row grow justify-between">
                 <Text className="text-white">{t.label}</Text>
                 <Text className="text-gray-500">
-                  {new Date(t.dueDate).toDateString()}
+                  {new Date(t.dueDate).toLocaleDateString()}
                 </Text>
               </View>
             </Pressable>

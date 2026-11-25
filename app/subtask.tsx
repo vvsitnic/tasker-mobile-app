@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Button, Text, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const today = new Date();
+const now = new Date();
 
 export default function Subtask() {
   const insets = useSafeAreaInsets();
@@ -17,6 +17,7 @@ export default function Subtask() {
   const addSubtask = useSubtasks((s) => s.addSubtask);
   const updateSubtask = useSubtasks((s) => s.updateSubtask);
   const getSubtask = useSubtasks((s) => s.getSubtask);
+  const removeSubtask = useSubtasks((s) => s.removeSubtask);
   const [dueDate, setDueDate] = useState(new Date());
   const [label, setLabel] = useState("");
 
@@ -28,7 +29,7 @@ export default function Subtask() {
         setLabel(subtask.label);
       }
     }
-  }, [id]);
+  }, [id, setDueDate, setLabel, getSubtask]);
 
   return (
     <View
@@ -50,12 +51,26 @@ export default function Subtask() {
               setDueDate(selectedDate);
             }}
             mode="datetime"
-            minimumDate={today}
-            maximumDate={maxDueDate ? new Date(+maxDueDate) : undefined}
+            minimumDate={now}
+            maximumDate={
+              maxDueDate && now.getTime() <= +maxDueDate
+                ? new Date(+maxDueDate)
+                : undefined
+            }
           />
         </View>
       </View>
       <View className="mt-auto flex flex-row justify-around">
+        {id != undefined && (
+          <Button
+            title="Delete"
+            onPress={() => {
+              removeSubtask(id + "");
+              router.back();
+            }}
+            disabled={id == undefined}
+          />
+        )}
         <Button
           title="Back"
           onPress={() => {

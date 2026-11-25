@@ -1,5 +1,6 @@
 import { Text, View } from "@/components/Themed";
 import {
+  deleteTask,
   getSubtasks,
   getTask,
   setCompleted,
@@ -8,6 +9,7 @@ import {
   updateTask,
 } from "@/db/tasks";
 import { useDbVersion } from "@/utils/dbVersion";
+import { useSubtasks } from "@/utils/subtasks";
 import DateTimePicker from "@expo/ui/community/datetime-picker";
 import Checkbox from "expo-checkbox";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -31,6 +33,8 @@ export default function EditTask() {
   const [subtasks, setSubtasks] = useState<Task[]>([]);
   const [dueDate, setDueDate] = useState(new Date());
   const [label, setLabel] = useState("");
+  const newSubtasks = useSubtasks((s) => s.subtasks);
+  const clear = useSubtasks((s) => s.clear);
 
   const load = useCallback(
     async () => setTask(await getTask(db, +id)),
@@ -59,7 +63,13 @@ export default function EditTask() {
       setLabel(task.label);
       setDueDate(new Date(task.dueDate));
     }
-  }, [id, task, loadSubtasks]);
+  }, [id, task, loadSubtasks, setLabel, setDueDate]);
+
+  useEffect(() => {
+    return () => {
+      clear();
+    };
+  }, [clear]);
 
   if (!task) return null;
 
@@ -79,12 +89,16 @@ export default function EditTask() {
           <Text className="text-white">Due Date:</Text>
           <DateTimePicker
             value={dueDate}
-            onValueChange={(event, selectedDate) => {
+            onValueChange={(_, selectedDate) => {
               setDueDate(selectedDate);
             }}
             mode="datetime"
             minimumDate={now}
-            maximumDate={maxDueDate ? new Date(+maxDueDate) : undefined}
+            maximumDate={
+              maxDueDate && now.getTime() <= +maxDueDate
+                ? new Date(+maxDueDate)
+                : undefined
+            }
           />
         </View>
       </View>
@@ -92,7 +106,7 @@ export default function EditTask() {
         <>
           <View className="flex flex-row justify-between items-center">
             <Text className="text-white">Subtasks:</Text>
-            {/* <Button
+            <Button
               title="+"
               onPress={() =>
                 router.navigate({
@@ -100,9 +114,33 @@ export default function EditTask() {
                   params: { maxDueDate: dueDate.getTime() + "" },
                 })
               }
-            /> */}
+            />
           </View>
           <ScrollView className="grow">
+            {newSubtasks.map((t) => {
+              return (
+                <Pressable
+                  key={t.id}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/subtask",
+                      params: {
+                        id: t.id,
+                        maxDueDate: dueDate.getTime() + "",
+                      },
+                    })
+                  }
+                  className="flex flex-row gap-2 p-1"
+                >
+                  <View className="flex flex-row grow justify-between">
+                    <Text className="text-white">{t.label}</Text>
+                    <Text className="text-gray-500">
+                      {new Date(t.dueDate).toLocaleDateString()}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
             {subtasks.map((t) => {
               return (
                 <Pressable
@@ -125,7 +163,7 @@ export default function EditTask() {
                   <View className="flex flex-row grow justify-between">
                     <Text className="text-white">{t.label}</Text>
                     <Text className="text-gray-500">
-                      {new Date(t.dueDate).toDateString()}
+                      {new Date(t.dueDate).toLocaleDateString()}
                     </Text>
                   </View>
                 </Pressable>
@@ -135,6 +173,14 @@ export default function EditTask() {
         </>
       )}
       <View className="flex mt-auto flex-row justify-around items-center">
+        <Button
+          title="Delete"
+          onPress={async () => {
+            await deleteTask(db, +id);
+            router.back();
+          }}
+          disabled={id == undefined}
+        />
         <Button
           title="Back"
           onPress={() => {
@@ -147,11 +193,12 @@ export default function EditTask() {
         />
         <Button
           title="Update"
-          onPress={() => {
-            update({
+          onPress={async () => {
+            await update({
               label,
               dueDate: dueDate.getTime(),
             });
+            clear();
           }}
         />
       </View>

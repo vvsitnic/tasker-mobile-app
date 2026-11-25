@@ -56,7 +56,7 @@ export async function addTask(
   parentId: number | null = null,
 ) {
   await db.withTransactionAsync(async () => {
-    const res = await db.runAsync(
+    const task = await db.runAsync(
       "INSERT INTO task (parentId, label, dueDate) VALUES (?, ?, ?)",
       parentId,
       label,
@@ -67,7 +67,7 @@ export async function addTask(
     for (const s of subtasks) {
       await db.runAsync(
         "INSERT INTO task (parentId, label, dueDate) VALUES (?, ?, ?)",
-        res.lastInsertRowId,
+        task.lastInsertRowId,
         s.label,
         s.dueDate,
       );
@@ -81,16 +81,45 @@ export async function updateTask(
   id: number,
   changes: TaskChanges,
 ) {
-  const columns = Object.keys(changes) as (keyof typeof changes)[];
-  if (columns.length === 0) return;
+  await db.withTransactionAsync(async () => {
+    const columns = Object.keys(changes) as (keyof typeof changes)[];
+    if (columns.length === 0) return;
 
-  const setClause = columns.map((col) => `${col} = ?`).join(", ");
-  const values = columns.map((col) => {
-    if (col === "isCompleted") return changes[col] ? 1 : 0;
-    return changes[col] as string | number;
+    const setClause = columns.map((col) => `${col} = ?`).join(", ");
+    const values = columns.map((col) => {
+      if (col === "isCompleted") return changes[col] ? 1 : 0;
+      return changes[col] as string | number;
+    });
+
+    await db.runAsync(
+      `UPDATE task SET ${setClause} WHERE id = ?`,
+      ...values,
+      id,
+    );
+
+    const subtasks = useSubtasks.getState().subtasks;
+    for (const s of subtasks) {
+      await db.runAsync(
+        "INSERT INTO task (parentId, label, dueDate) VALUES (?, ?, ?)",
+        id,
+        s.label,
+        s.dueDate,
+      );
+    }
+
+    if (subtasks.length > 0) {
+      await db.runAsync(
+        `UPDATE task
+         SET isCompleted = NOT EXISTS (
+           SELECT 1 FROM task c
+           WHERE c.parentId = task.id AND c.id <> c.parentId AND c.isCompleted = 0
+         )
+         WHERE id = ?`,
+        id,
+      );
+    }
   });
 
-  await db.runAsync(`UPDATE task SET ${setClause} WHERE id = ?`, ...values, id);
   useDbVersion.getState().bump();
 }
 
@@ -131,6 +160,26 @@ export async function setCompleted(
 }
 
 export async function deleteTask(db: SQLiteDatabase, id: number) {
-  await db.runAsync("DELETE FROM task WHERE id = ?", id);
+  await db.withTransactionAsync(async () => {
+    const row = await db.getFirstAsync<{ parentId: number }>(
+      "SELECT parentId FROM task WHERE id = ?",
+      id,
+    );
+    if (!row) return;
+
+    await db.runAsync("DELETE FROM task WHERE id = ?", id);
+
+    if (row.parentId !== id) {
+      await db.runAsync(
+        `UPDATE task
+         SET isCompleted = NOT EXISTS (
+           SELECT 1 FROM task c
+           WHERE c.parentId = task.id AND c.id <> c.parentId AND c.isCompleted = 0
+         )
+         WHERE id = ?`,
+        row.parentId,
+      );
+    }
+  });
   useDbVersion.getState().bump();
 }

@@ -74,7 +74,7 @@ function TasksList({
   }, [dbVersion, load]);
 
   useEffect(() => {
-    if (sortIndex == 0) setSortedTasks(tasks);
+    if (sortIndex === 0) setSortedTasks(tasks);
     else
       setSortedTasks(
         [...tasks].sort((a, b) => {
