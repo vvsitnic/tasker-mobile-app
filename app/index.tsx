@@ -19,7 +19,7 @@ export default function TabOneScreen() {
     <View className="flex h-screen" style={{ paddingTop: insets.top }}>
       <View className="flex justify-center items-center p-6">
         <Text className="text-xl text-white">Tasker</Text>
-        <Text className="text-white">Daily Progress: 50%</Text>
+        {/* <Text className="text-white">Daily Progress: 50%</Text> */}
       </View>
       <View className="grow" style={{ paddingBottom: insets.bottom }}>
         <View className="flex flex-row mb-2 items-center">

@@ -81,33 +81,37 @@ export async function updateTask(
   id: number,
   changes: TaskChanges,
 ) {
+  const columns = Object.keys(changes) as (keyof typeof changes)[];
   await db.withTransactionAsync(async () => {
-    const columns = Object.keys(changes) as (keyof typeof changes)[];
-    if (columns.length === 0) return;
-
-    const setClause = columns.map((col) => `${col} = ?`).join(", ");
-    const values = columns.map((col) => {
-      if (col === "isCompleted") return changes[col] ? 1 : 0;
-      return changes[col] as string | number;
-    });
-
-    await db.runAsync(
-      `UPDATE task SET ${setClause} WHERE id = ?`,
-      ...values,
-      id,
-    );
-
-    const subtasks = useSubtasks.getState().subtasks;
-    for (const s of subtasks) {
+    if (columns.length !== 0) {
+      const setClause = columns.map((col) => `${col} = ?`).join(", ");
+      const values = columns.map((col) => {
+        if (col === "isCompleted") return changes[col] ? 1 : 0;
+        return changes[col] as string | number;
+      });
       await db.runAsync(
-        "INSERT INTO task (parentId, label, dueDate) VALUES (?, ?, ?)",
+        `UPDATE task SET ${setClause} WHERE id = ?`,
+        ...values,
         id,
-        s.label,
-        s.dueDate,
       );
     }
 
-    if (subtasks.length > 0) {
+    const subtasks = useSubtasks.getState().subtasks;
+    const task = await db.getFirstAsync<{ id: number; parentId: number }>(
+      "SELECT id, parentId FROM task WHERE id = ?",
+      id,
+    );
+    if (!task) return;
+    if (subtasks.length > 0 && task.id === task.parentId) {
+      for (const s of subtasks) {
+        await db.runAsync(
+          "INSERT INTO task (parentId, label, dueDate) VALUES (?, ?, ?)",
+          id,
+          s.label,
+          s.dueDate,
+        );
+      }
+
       await db.runAsync(
         `UPDATE task
          SET isCompleted = NOT EXISTS (
